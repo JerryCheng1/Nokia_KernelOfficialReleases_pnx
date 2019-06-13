@@ -2377,6 +2377,7 @@ static int qpnp_wled_parse_dt(struct qpnp_wled *wled)
 	u32 temp_val;
 	int rc, i, size;
 	u8 *strings;
+	bool tmp=0;
 
 	wled->cdev.name = "wled";
 	rc = of_property_read_string(pdev->dev.of_node,
@@ -2519,6 +2520,13 @@ static int qpnp_wled_parse_dt(struct qpnp_wled *wled)
 			wled->lcd_auto_pfm_en = false;
 		else
 			wled->lcd_auto_pfm_en = true;
+
+		tmp = of_property_read_bool(pdev->dev.of_node,
+							"qcom,lcd-auto-pfm-disable");
+
+		if(tmp){
+			wled->lcd_auto_pfm_en = false;
+		}
 
 		wled->lcd_auto_pfm_thresh = QPNP_WLED_LCD_AUTO_PFM_DFLT_THRESH;
 		rc = of_property_read_u8(pdev->dev.of_node,

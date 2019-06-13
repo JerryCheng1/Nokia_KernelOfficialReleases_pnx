@@ -1464,7 +1464,7 @@ static bool is_temp_valid_cap_learning(struct fg_chip *chip)
 
 	if (batt_temp > chip->dt.cl_max_temp ||
 		batt_temp < chip->dt.cl_min_temp) {
-		fg_dbg(chip, FG_CAP_LEARN, "batt temp %d out of range [%d %d]\n",
+		pr_err("batt temp %d out of range [%d %d]\n",
 			batt_temp, chip->dt.cl_min_temp, chip->dt.cl_max_temp);
 		return false;
 	}
@@ -1529,7 +1529,7 @@ static void fg_cap_learning_post_process(struct fg_chip *chip)
 	if (rc < 0)
 		pr_err("Error in saving learned_cc_uah, rc=%d\n", rc);
 
-	fg_dbg(chip, FG_CAP_LEARN, "final cc_uah = %lld, learned capacity %lld -> %lld uah\n",
+	pr_err("final cc_uah = %lld, learned capacity %lld -> %lld uah\n",
 		chip->cl.final_cc_uah, old_cap, chip->cl.learned_cc_uah);
 }
 
@@ -1559,7 +1559,7 @@ static int fg_cap_learning_process_full_data(struct fg_chip *chip)
 	delta_cc_uah = div64_u64(chip->cl.learned_cc_uah * cc_soc_delta_pct,
 				100);
 	chip->cl.final_cc_uah = chip->cl.init_cc_uah + delta_cc_uah;
-	fg_dbg(chip, FG_CAP_LEARN, "Current cc_soc=%d cc_soc_delta_pct=%u total_cc_uah=%llu\n",
+	pr_err("Current cc_soc=%d cc_soc_delta_pct=%u total_cc_uah=%llu\n",
 		cc_soc_sw, cc_soc_delta_pct, chip->cl.final_cc_uah);
 	return 0;
 }
@@ -1590,7 +1590,7 @@ static int fg_cap_learning_begin(struct fg_chip *chip, u32 batt_soc)
 	}
 
 	chip->cl.init_cc_soc_sw = cc_soc_sw;
-	fg_dbg(chip, FG_CAP_LEARN, "Capacity learning started @ battery SOC %d init_cc_soc_sw:%d\n",
+	pr_err("Capacity learning started @ battery SOC %d init_cc_soc_sw:%d\n",
 		batt_soc_msb, chip->cl.init_cc_soc_sw);
 out:
 	return rc;
@@ -1664,7 +1664,11 @@ static void fg_cap_learning_update(struct fg_chip *chip)
 				prime_cc = true;
 		}
 	} else {
+#if defined(CONFIG_FIH_BATTERY)
+		if (chip->charge_done && batt_soc_msb == FULL_SOC_RAW) {
+#else
 		if (chip->charge_done) {
+#endif /* CONFIG_FIH_BATTERY */
 			rc = fg_cap_learning_done(chip);
 			if (rc < 0)
 				pr_err("Error in completing capacity learning, rc=%d\n",
@@ -1676,7 +1680,7 @@ static void fg_cap_learning_update(struct fg_chip *chip)
 
 		if (chip->charge_status == POWER_SUPPLY_STATUS_DISCHARGING) {
 			if (!input_present) {
-				fg_dbg(chip, FG_CAP_LEARN, "Capacity learning aborted @ battery SOC %d\n",
+				pr_err("Capacity learning aborted @ battery SOC %d\n",
 					 batt_soc_msb);
 				chip->cl.active = false;
 				chip->cl.init_cc_uah = 0;
@@ -1693,7 +1697,7 @@ static void fg_cap_learning_update(struct fg_chip *chip)
 				 * intermittently.
 				 */
 			} else {
-				fg_dbg(chip, FG_CAP_LEARN, "Capacity learning aborted @ battery SOC %d\n",
+				pr_err("Capacity learning aborted @ battery SOC %d\n",
 					batt_soc_msb);
 				chip->cl.active = false;
 				chip->cl.init_cc_uah = 0;

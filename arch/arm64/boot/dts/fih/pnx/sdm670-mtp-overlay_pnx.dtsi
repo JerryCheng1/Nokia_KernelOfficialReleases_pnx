@@ -30,8 +30,6 @@
 /* LIGHT Camera */
 
 /* Fingerprint */
-#include "fingerprint-gf3258.dtsi"
-#include "fingerprint-et5xx.dtsi"
 
 /* SD Card */
 #include "sd-evb.dtsi"

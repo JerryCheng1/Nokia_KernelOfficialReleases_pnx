@@ -1728,6 +1728,12 @@ int hid_connect(struct hid_device *hdev, unsigned int connect_mask)
 		bus = "<UNKNOWN>";
 	}
 
+	//20181031@ray: statsD log for usb headset info. -------------- st.
+	if ((hdev->bus == BUS_USB)||(hdev->bus == BUS_BLUETOOTH) ) {	    
+	    printk("BBox::STD;150501|[%s]\n", hdev->name);
+	  }
+	//20181031@ray: statsD log for usb headset info. -------------- ed.
+
 	ret = device_create_file(&hdev->dev, &dev_attr_country);
 	if (ret)
 		hid_warn(hdev,

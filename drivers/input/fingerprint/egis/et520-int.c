@@ -226,6 +226,7 @@ void interrupt_timer_routine(unsigned long _data)
 
 static irqreturn_t fp_eint_func(int irq, void *dev_id)
 {
+	DEBUG_PRINT("1102 FPS triggered !!!!!!!\n");
 	//DEBUG_PRINT("[egis]fp_eint_func edge\n");
 	//if (!fps_ints.int_count)
 	//	mod_timer(&fps_ints.timer, jiffies + msecs_to_jiffies(fps_ints.detect_period));

@@ -26,7 +26,7 @@
 /* Switch */
 
 /* Camera */
-#include "sdm670-fih-camera-sensor-mtp-evt.dtsi"/* MM-CCC-BringUpCameraSensorForEvt-20180511-00+ */
+#include "../common/sdm670-fih-camera-sensor-mtp-evt.dtsi"/* MM-CCC-BringUpCameraSensorForEvt-20180511-00+ */
 
 /* Fingerprint */
 

@@ -65,6 +65,13 @@ static const struct drm_prop_enum_list e_power_mode[] = {
 	{SDE_MODE_DPMS_OFF,	"OFF"},
 };
 
+#define DISPLAY_STD_LOG_E(mode,x)       \
+	do { \
+		if(mode==SDE_MODE_DPMS_ON) { \
+			printk("BBox::STD;140700|Display|Enable|DisplayOn|%d\n",x); \
+		} \
+	} while (0)
+
 static int sde_backlight_device_update_status(struct backlight_device *bd)
 {
 	int brightness;
@@ -489,6 +496,7 @@ static int _sde_connector_update_power_locked(struct sde_connector *c_conn)
 		mutex_unlock(&c_conn->lock);
 		rc = set_power(connector, mode, display);
 		mutex_lock(&c_conn->lock);
+		DISPLAY_STD_LOG_E(mode,1);
 	}
 	c_conn->last_panel_power_mode = mode;
 

@@ -15,6 +15,8 @@
 
 #include "himax_debug.h"
 #include "himax_ic.h"
+#include "dsi_panel.h"
+#include "msm_drv.h"
 
 //struct himax_debug_data* debug_data;
 
@@ -75,6 +77,7 @@ extern bool g_auto_update_flag;
 //FIH touch self test
 bool ResultSelfTest = false; // FIH self test result
 static unsigned int double_tap_enable = 0; //FIH double tap
+extern int get_Display_ID(void);
 
 //=============================================================================================================
 //
@@ -3780,6 +3783,8 @@ void touch_tpfwimver_read(char *fw_ver)
 unsigned int touch_double_tap_read(void)
 {
 	I("%s: FIH read double tap = %d \n", __func__, double_tap_enable);
+	printk("BBox::STD;151300|Himax-0x%2.2X_0x%2.2X\n", ic_data->vendor_fw_ver, ic_data->vendor_touch_cfg_ver); // For touch Stats D
+	get_Display_ID(); //For Display Stats D
 	return double_tap_enable;
 }
 

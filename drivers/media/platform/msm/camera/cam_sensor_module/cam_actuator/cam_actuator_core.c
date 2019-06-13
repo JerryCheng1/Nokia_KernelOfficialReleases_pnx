@@ -390,8 +390,10 @@ static void cam_actuator_update_req_mgr(
 		CAM_DBG(CAM_ACTUATOR, "Request Id: %lld added to CRM",
 			add_req.req_id);
 	} else {
-		CAM_ERR(CAM_ACTUATOR, "Can't add Request ID: %lld to CRM",
+        //FIH modify log level because of this isn't a error { 20181120
+		CAM_DBG(CAM_ACTUATOR, "Can't add Request ID: %lld to CRM",
 			csl_packet->header.request_id);
+        //FIH modify log level because of this isn't a error } 20181120
 	}
 }
 

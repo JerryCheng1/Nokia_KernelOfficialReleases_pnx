@@ -50,6 +50,9 @@
 static unsigned int debug_quirks = 0;
 static unsigned int debug_quirks2;
 
+static int FIH_STD_emmc_err_counter = 0;
+static int FIH_STD_sd_err_counter = 0;
+
 static void sdhci_finish_data(struct sdhci_host *);
 
 static bool sdhci_check_state(struct sdhci_host *);
@@ -57,6 +60,57 @@ static bool sdhci_check_state(struct sdhci_host *);
 static void sdhci_enable_sdio_irq_nolock(struct sdhci_host *host, int enable);
 
 static void sdhci_enable_preset_value(struct sdhci_host *host, bool enable);
+
+static void sdhci_fih_SatsD_checker(int hostname, int err_type)
+{
+	static bool emmc_log_flg = true;
+	static bool sd_log_flg = true;
+	int type_id = 0;
+        
+	switch (hostname) {
+		case FIH_SDHCI_STD_TY_EMMC: type_id = FIH_SDHCI_STD_EMMC_TYPE_ID; FIH_STD_emmc_err_counter++; break;
+		case FIH_SDHCI_STD_TY_SD: type_id = FIH_SDHCI_STD_SD_TYPE_ID; FIH_STD_sd_err_counter++; break;
+		default: printk("sdhci STD: type_id error.\n"); return;
+	}
+
+	if (type_id == FIH_SDHCI_STD_EMMC_TYPE_ID) {
+		if (emmc_log_flg == false) return;
+		switch (err_type) {
+			case FIH_SDHCI_STD_ERR_INT_CRC: printk("BBox::STD;%d|SDHCI_STD_ERR_INT_CRC, %d\n", FIH_STD_EMMC_CRC_ERR, FIH_STD_emmc_err_counter); break;
+			case FIH_SDHCI_STD_ERR_INT_DATA_CRC: printk("BBox::STD;%d|SDHCI_STD_ERR_INT_DATA_CRC, %d\n", FIH_STD_EMMC_CRC_ERR, FIH_STD_emmc_err_counter); break;
+			case FIH_SDHCI_STD_ERR_AUTO_CMD_CRC: printk("BBox::STD;%d|SDHCI_STD_ERR_AUTO_CMD_CRC, %d\n", FIH_STD_EMMC_CRC_ERR, FIH_STD_emmc_err_counter); break;
+			default: printk("sdhci STD: err_type error.\n"); return;
+		}
+	} else if (type_id == FIH_SDHCI_STD_SD_TYPE_ID) {
+		if (sd_log_flg == false) return;
+		switch (err_type) {
+			case FIH_SDHCI_STD_ERR_INT_CRC: printk("BBox::STD;%d|SDHCI_STD_ERR_INT_CRC, %d\n", FIH_STD_SD_CRC_ERR, FIH_STD_sd_err_counter); break;
+			case FIH_SDHCI_STD_ERR_INT_DATA_CRC: printk("BBox::STD;%d|SDHCI_STD_ERR_INT_DATA_CRC, %d\n", FIH_STD_SD_CRC_ERR, FIH_STD_sd_err_counter); break;
+			case FIH_SDHCI_STD_ERR_AUTO_CMD_CRC: printk("BBox::STD;%d|SDHCI_STD_ERR_AUTO_CMD_CRC, %d\n", FIH_STD_SD_CRC_ERR, FIH_STD_sd_err_counter); break;
+			default: printk("sdhci STD: err_type error.\n"); return;
+		}
+	}
+#if 0
+        //Every 5 times error save SatsD log
+        if ((FIH_STD_emmc_err_counter%5==0) && (type_id == FIH_SDHCI_STD_EMMC_TYPE_ID) && (emmc_log_flg == true)){
+		//Triger SatsD Checker: Dump emmc STD log
+		printk("BBox::STD;%d|eMMC CRC error %d\n", FIH_STD_EMMC_CRC_ERR, FIH_STD_emmc_err_counter);
+        } else if ((FIH_STD_sd_err_counter%5==0) && (type_id == FIH_SDHCI_STD_SD_TYPE_ID) && (sd_log_flg == true)){
+		//Triger SatsD Checker: Dump SD SatsD log
+		printk("BBox::STD;%d|SD CRC error %d\n", FIH_STD_SD_CRC_ERR, FIH_STD_sd_err_counter);
+        }
+#endif
+        //If CRC error over 50 times, disable dump log
+        if (FIH_STD_emmc_err_counter >= FIH_SDHCI_STD_MAX_ERR) {
+		//printk("sdhci STD: sd_log_flg = false\n");
+		emmc_log_flg = false;
+        }
+        else if (FIH_STD_sd_err_counter >= FIH_SDHCI_STD_MAX_ERR) {
+		//printk("sdhci STD: sd_log_flg = false\n");
+		sd_log_flg = false;
+
+        }
+}
 
 static void sdhci_dump_state(struct sdhci_host *host)
 {
@@ -3111,6 +3165,14 @@ static void sdhci_cmd_irq(struct sdhci_host *host, u32 intmask)
 			host->mmc->err_stats[MMC_ERR_CMD_CRC]++;
 		}
 
+		if(strncmp(mmc_hostname(host->mmc), "mmc0", 4) == 0) {
+			if (intmask & SDHCI_INT_CRC)
+				sdhci_fih_SatsD_checker(FIH_SDHCI_STD_TY_EMMC, FIH_SDHCI_STD_ERR_INT_CRC);
+		}else if(strncmp(mmc_hostname(host->mmc), "mmc1", 4) == 0) {
+			if (intmask & SDHCI_INT_CRC)
+				sdhci_fih_SatsD_checker(FIH_SDHCI_STD_TY_SD, FIH_SDHCI_STD_ERR_INT_CRC);
+		}
+
 		if (intmask & SDHCI_INT_AUTO_CMD_ERR) {
 			auto_cmd_status = host->auto_cmd_err_sts;
 			host->mmc->err_stats[MMC_ERR_AUTO_CMD]++;
@@ -3124,8 +3186,14 @@ static void sdhci_cmd_irq(struct sdhci_host *host, u32 intmask)
 				host->cmd->error = -EIO;
 			else if (auto_cmd_status & SDHCI_AUTO_CMD_TIMEOUT_ERR)
 				host->cmd->error = -ETIMEDOUT;
-			else if (auto_cmd_status & SDHCI_AUTO_CMD_CRC_ERR)
+			else if (auto_cmd_status & SDHCI_AUTO_CMD_CRC_ERR) {
 				host->cmd->error = -EILSEQ;
+				if(strncmp(mmc_hostname(host->mmc), "mmc0", 4) == 0) {
+					sdhci_fih_SatsD_checker(FIH_SDHCI_STD_TY_EMMC, FIH_SDHCI_STD_ERR_AUTO_CMD_CRC);
+				}else if(strncmp(mmc_hostname(host->mmc), "mmc1", 4) == 0) {
+					sdhci_fih_SatsD_checker(FIH_SDHCI_STD_TY_SD, FIH_SDHCI_STD_ERR_AUTO_CMD_CRC);
+				}
+			}
 		}
 
 		/*
@@ -3280,6 +3348,13 @@ static void sdhci_data_irq(struct sdhci_host *host, u32 intmask)
 		(command != MMC_BUS_TEST_R)) {
 		host->data->error = -EILSEQ;
 		host->mmc->err_stats[MMC_ERR_DAT_CRC]++;
+		if(strncmp(mmc_hostname(host->mmc), "mmc0", 4) == 0) {
+			if (intmask & SDHCI_INT_DATA_CRC)
+				sdhci_fih_SatsD_checker(FIH_SDHCI_STD_TY_EMMC, FIH_SDHCI_STD_ERR_INT_DATA_CRC);
+		}else if(strncmp(mmc_hostname(host->mmc), "mmc1", 4) == 0) {
+			if (intmask & SDHCI_INT_DATA_CRC)
+				sdhci_fih_SatsD_checker(FIH_SDHCI_STD_TY_SD, FIH_SDHCI_STD_ERR_INT_DATA_CRC);
+		}
 	}
 	else if (intmask & SDHCI_INT_ADMA_ERROR) {
 		pr_err("%s: ADMA error\n", mmc_hostname(host->mmc));
@@ -3402,6 +3477,22 @@ static irqreturn_t sdhci_cmdq_irq(struct sdhci_host *host, u32 intmask)
 		err = sdhci_get_cmd_err(host, intmask);
 	else if (intmask & SDHCI_INT_DATA_MASK)
 		err = sdhci_get_data_err(host, intmask);
+
+	if(strncmp(mmc_hostname(host->mmc), "mmc0", 4) == 0) {
+		if (intmask & SDHCI_INT_CRC)
+			sdhci_fih_SatsD_checker(FIH_SDHCI_STD_TY_EMMC, FIH_SDHCI_STD_ERR_INT_CRC);
+		else if (intmask & SDHCI_INT_DATA_CRC)
+			sdhci_fih_SatsD_checker(FIH_SDHCI_STD_TY_EMMC, FIH_SDHCI_STD_ERR_INT_DATA_CRC);
+		else if (FIH_STD_emmc_err_counter!=0)
+                	FIH_STD_emmc_err_counter = 0;  //If not CRC error, reset STD CRC counter	
+	}else if(strncmp(mmc_hostname(host->mmc), "mmc1", 4) == 0) {
+		if (intmask & SDHCI_INT_CRC)
+			sdhci_fih_SatsD_checker(FIH_SDHCI_STD_TY_SD, FIH_SDHCI_STD_ERR_INT_CRC);
+		else if (intmask & SDHCI_INT_DATA_CRC)
+			sdhci_fih_SatsD_checker(FIH_SDHCI_STD_TY_SD, FIH_SDHCI_STD_ERR_INT_DATA_CRC);
+		else if (FIH_STD_sd_err_counter!=0)
+                	FIH_STD_sd_err_counter = 0;  //If not CRC error, reset STD CRC counter
+	}
 
 	ret = cmdq_irq(host->mmc, err);
 	if (err) {
