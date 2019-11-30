@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2017, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2016-2017, 2019, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -198,6 +198,8 @@
 #define FG_RR_TP_REV_VERSION1		21
 #define FG_RR_TP_REV_VERSION2		29
 #define FG_RR_TP_REV_VERSION3		32
+
+#define BATT_ID_SETTLE_DELAY_80_MS		0xE0
 
 /*
  * The channel number is not a physical index in hardware,
@@ -767,8 +769,7 @@ static int rradc_check_status_ready_with_retry(struct rradc_chip *chip,
 
 		if (((prop->channel == RR_ADC_CHG_TEMP) ||
 			(prop->channel == RR_ADC_SKIN_TEMP) ||
-			(prop->channel == RR_ADC_USBIN_I) ||
-			(prop->channel == RR_ADC_DIE_TEMP)) &&
+			(prop->channel == RR_ADC_USBIN_I)) &&
 					((!rradc_is_usb_present(chip)))) {
 			pr_debug("USB not present for %d\n", prop->channel);
 			rc = -ENODATA;
@@ -862,6 +863,13 @@ static int rradc_do_batt_id_conversion(struct rradc_chip *chip,
 		return rc;
 	}
 
+	rc = rradc_masked_write(chip, FG_ADC_RR_BATT_ID_CFG,
+			BATT_ID_SETTLE_DELAY_80_MS, BATT_ID_SETTLE_DELAY_80_MS);
+	if (rc < 0) {
+		pr_err("BATT_ID settling time config failed:%d\n", rc);
+		ret = rc;
+	}
+
 	rc = rradc_masked_write(chip, FG_ADC_RR_BATT_ID_TRIGGER,
 				FG_ADC_RR_BATT_ID_TRIGGER_CTL,
 				FG_ADC_RR_BATT_ID_TRIGGER_CTL);
@@ -932,6 +940,30 @@ static int rradc_do_conversion(struct rradc_chip *chip,
 
 		/* Restore usb_in trigger */
 		rc = rradc_masked_write(chip, FG_ADC_RR_USB_IN_V_TRIGGER,
+				FG_ADC_RR_USB_IN_V_EVERY_CYCLE_MASK, 0);
+		if (rc < 0) {
+			pr_err("Restore every cycle update failed:%d\n", rc);
+			goto fail;
+		}
+		break;
+	case RR_ADC_DIE_TEMP:
+		/* Force conversion every cycle */
+		rc = rradc_masked_write(chip, FG_ADC_RR_PMI_DIE_TEMP_TRIGGER,
+				FG_ADC_RR_USB_IN_V_EVERY_CYCLE_MASK,
+				FG_ADC_RR_USB_IN_V_EVERY_CYCLE);
+		if (rc < 0) {
+			pr_err("Force every cycle update failed:%d\n", rc);
+			goto fail;
+		}
+
+		rc = rradc_read_channel_with_continuous_mode(chip, prop, buf);
+		if (rc < 0) {
+			pr_err("Error reading in continuous mode:%d\n", rc);
+			goto fail;
+		}
+
+		/* Restore aux_therm trigger */
+		rc = rradc_masked_write(chip, FG_ADC_RR_PMI_DIE_TEMP_TRIGGER,
 				FG_ADC_RR_USB_IN_V_EVERY_CYCLE_MASK, 0);
 		if (rc < 0) {
 			pr_err("Restore every cycle update failed:%d\n", rc);

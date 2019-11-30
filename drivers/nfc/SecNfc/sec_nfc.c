@@ -42,6 +42,13 @@
 #include <asm/uaccess.h>
 #include "sec_nfc.h"
 
+//fihtdccode@CPLai add nfc bbs log begin
+#define BBSLOG
+#ifdef BBSLOG
+#define NFC_READ_ERROR do {printk("BBox;%s: NCI cmd transfer failure\n", __func__); printk("BBox::UEC;16::0");} while(0)
+#endif
+//fihtdccode@CPLai add nfc bbs log end
+
 #ifdef CONFIG_SEC_NFC_CLK_REQ
 #include <linux/interrupt.h>
 #endif
@@ -181,6 +188,11 @@ static ssize_t sec_nfc_read(struct file *file, char __user *buf,
 		dev_err(info->dev, "read failed: return: %d count: %d\n",
 			ret, (int)count);
 		//ret = -EREMOTEIO;
+//fihtdccode@CPLai add nfc bbs log begin
+#ifdef BBSLOG
+		NFC_READ_ERROR;
+#endif
+//fihtdccode@CPLai add nfc bbs log end
 		goto read_error;
 	}
 

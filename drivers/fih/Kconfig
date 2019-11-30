@@ -27,7 +27,7 @@ config FIH_INFO
 config FIH_DDR
 	bool "fih ddr"
 	depends on FIH
-	default y
+	default n
 	help
 	  support fih ddr virtual file
 
@@ -36,6 +36,13 @@ config FIH_EMMC
 	default y
 	help
 	  support fih emmc function
+
+config FIH_KEY
+	bool "fih key"
+	depends on FIH
+	default n
+	help
+	  support fih key logging
 
 config FIH_MFD
 	bool "fih mfd"
@@ -58,20 +65,26 @@ config FIH_CDA
 	help
 	  support fih cda virtual file
 
+config FIH_SEB
+	bool "fih seb"
+	depends on FIH
+	default n
+	help
+	  support fih seb virtual file
+
 config FIH_LOG
-        bool "fih log"
-        depends on FIH
-        default n
-        help
-          support fih log virtual file
+	bool "fih log"
+	depends on FIH
+	default n
+	help
+	  support fih log virtual file
 
 config FIH_MFR
 	bool "fih mfr"
 	depends on FIH
-	default y
+	default n
 	help
-	  support fih mfr virtual file          
-          
+	  support fih mfr virtual file
 
 config FIH_TOUCH
 	bool "fih touch"
@@ -88,10 +101,10 @@ config FIH_CPU_USAGE
 	  support fih cpu usage information
 
 config FIH_DLOAD
-         bool "fih download mode by bset enable"
-         default n
-         help
-           support fih download mode by bset enable
+	bool "fih download mode by bset enable"
+	default n
+	help
+	  support fih download mode by bset enable
 
 config FIH_FVER
 	bool "fih fver"
@@ -101,10 +114,10 @@ config FIH_FVER
 	  support fih fver virtual file
 
 config FIH_RESUME_PERFORMANCE_LOG
-        bool "FIH LOG about resume performance"
-        default n
-        help
-          Enable resume performance log
+	bool "FIH LOG about resume performance"
+	default n
+	help
+	  Enable resume performance log
 
 config FIH_HALL_SENSOR
 	bool "fih hall sensor"
@@ -127,12 +140,6 @@ config FIH_USB
 	help
 	  support FIH USB Driver
 
-config FIH_SECBOOT
-	bool "fih secboot"
-	default n
-	help
-	support fih secboot virtual file
-
 config FIH_CPU
 	bool "fih cpu"
 	depends on FIH
@@ -153,6 +160,7 @@ config FIH_DUMP_WAKELOCK
 	default n
 	help
 	  Show active wakelock info after screen off.
+
 config FIH_RPMH_MASTER_STATS
 	bool "Show rpmh master stats."
 	depends on FIH
@@ -166,9 +174,11 @@ config FIH_LCM
 	default n
 	help
 	  support fih Lcm
+
 config FIH_RECAL_STATUS
 	bool "fih recal status"
 	default y
 	help
 	  support fih recal status function
+
 endmenu

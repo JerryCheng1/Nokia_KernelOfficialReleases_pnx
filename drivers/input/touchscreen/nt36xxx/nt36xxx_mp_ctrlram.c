@@ -66,7 +66,7 @@ static uint8_t *RecordResult_FW_DiffMax = NULL;
 static uint8_t *RecordResult_FW_DiffMin = NULL;
 
 //FIH touch -- start
-static int32_t TestResult_All = 0;
+static int32_t TestResult_All = 1;
 //FIH touch -- end
 
 static int32_t TestResult_Short = 0;

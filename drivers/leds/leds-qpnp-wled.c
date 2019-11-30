@@ -2158,22 +2158,26 @@ static int qpnp_wled_config(struct qpnp_wled *wled)
 		return rc;
 
 	/* Configure the HYBRID THRESHOLD register */
-	if (wled->hyb_thres < QPNP_WLED_HYB_THRES_MIN)
-		wled->hyb_thres = QPNP_WLED_HYB_THRES_MIN;
-	else if (wled->hyb_thres > QPNP_WLED_HYB_THRES_MAX)
-		wled->hyb_thres = QPNP_WLED_HYB_THRES_MAX;
+	if (wled->dim_mode == QPNP_WLED_DIM_HYBRID) {
+		if (wled->hyb_thres < QPNP_WLED_HYB_THRES_MIN)
+			wled->hyb_thres = QPNP_WLED_HYB_THRES_MIN;
+		else if (wled->hyb_thres > QPNP_WLED_HYB_THRES_MAX)
+			wled->hyb_thres = QPNP_WLED_HYB_THRES_MAX;
 
-	rc = qpnp_wled_read_reg(wled, QPNP_WLED_HYB_THRES_REG(wled->sink_base),
-			&reg);
-	if (rc < 0)
-		return rc;
-	reg &= QPNP_WLED_HYB_THRES_MASK;
-	temp = fls(wled->hyb_thres / QPNP_WLED_HYB_THRES_MIN) - 1;
-	reg |= temp;
-	rc = qpnp_wled_write_reg(wled, QPNP_WLED_HYB_THRES_REG(wled->sink_base),
-			reg);
-	if (rc)
-		return rc;
+		rc = qpnp_wled_read_reg(wled,
+				QPNP_WLED_HYB_THRES_REG(wled->sink_base),
+				&reg);
+		if (rc < 0)
+			return rc;
+		reg &= QPNP_WLED_HYB_THRES_MASK;
+		temp = fls(wled->hyb_thres / QPNP_WLED_HYB_THRES_MIN) - 1;
+		reg |= temp;
+		rc = qpnp_wled_write_reg(wled,
+				QPNP_WLED_HYB_THRES_REG(wled->sink_base),
+				reg);
+		if (rc)
+			return rc;
+	}
 
 	/* Configure TEST5 register */
 	if (wled->dim_mode == QPNP_WLED_DIM_DIGITAL) {
@@ -2377,7 +2381,6 @@ static int qpnp_wled_parse_dt(struct qpnp_wled *wled)
 	u32 temp_val;
 	int rc, i, size;
 	u8 *strings;
-	bool tmp=0;
 
 	wled->cdev.name = "wled";
 	rc = of_property_read_string(pdev->dev.of_node,
@@ -2520,13 +2523,6 @@ static int qpnp_wled_parse_dt(struct qpnp_wled *wled)
 			wled->lcd_auto_pfm_en = false;
 		else
 			wled->lcd_auto_pfm_en = true;
-
-		tmp = of_property_read_bool(pdev->dev.of_node,
-							"qcom,lcd-auto-pfm-disable");
-
-		if(tmp){
-			wled->lcd_auto_pfm_en = false;
-		}
 
 		wled->lcd_auto_pfm_thresh = QPNP_WLED_LCD_AUTO_PFM_DFLT_THRESH;
 		rc = of_property_read_u8(pdev->dev.of_node,
@@ -2733,9 +2729,10 @@ static int qpnp_wled_parse_dt(struct qpnp_wled *wled)
 	else
 		wled->max_strings = QPNP_WLED_MAX_STRINGS;
 
+	temp_val = 0;
 	prop = of_find_property(pdev->dev.of_node,
 			"qcom,led-strings-list", &temp_val);
-	if (!prop || !temp_val || temp_val > QPNP_WLED_MAX_STRINGS) {
+	if (!prop || temp_val > QPNP_WLED_MAX_STRINGS) {
 		dev_err(&pdev->dev, "Invalid strings info, use default");
 		wled->num_strings = wled->max_strings;
 		for (i = 0; i < wled->num_strings; i++)

@@ -86,16 +86,9 @@
 	qcom,fs-curr-ua = <20000>;
 	qcom,led-strings-list= [00 01];
 	qcom,boost-fs-curr-ua = <25000>;
-	//WLED Hybrid mode
 	qcom,hyb-thres = <1250>;
 	qcom,en-phase-stag;
-	qcom,mod-freq-khz = <19200>;
-	//WLED Digital mode
-	//qcom,mod-freq-khz = <1200>;
-	//qcom,dim-mode = "digital";
-	//qcom,en-9b-dim-res;
 
-	//qcom,lcd-auto-pfm-disable;
 
 };
 
@@ -151,7 +144,6 @@
 			qcom,supply-enable-load = <62000>;
 			qcom,supply-disable-load = <80>;
 			qcom,supply-post-on-sleep = <1>;
-			qcom,supply-pre-off-sleep = <1>;
 			qcom,supply-post-off-sleep = <1>;
 		};
 
@@ -216,7 +208,7 @@
 	};
 
 
-	dsi_hx83112_fhd_video_display: qcom,dsi-display@17 {
+	dsi_hx83112_fhd_video_display: qcom,dsi-display@21 {
 		compatible = "qcom,dsi-display";
 		label = "dsi_hx83112_fhd_video_display";
 		qcom,display-type = "primary";
@@ -225,7 +217,7 @@
 		qcom,dsi-phy = <&mdss_dsi_phy0>;
 		clocks = <&mdss_dsi0_pll BYTECLK_MUX_0_CLK>,
 		       <&mdss_dsi0_pll PCLK_MUX_0_CLK>;
-		clock-names = "src_byte_clk", "src_pixel_clk";
+		clock-names = "mux_byte_clk", "mux_pixel_clk";
 
 		pinctrl-names = "panel_active", "panel_suspend";
 		pinctrl-0 = <&sde_dsi_active &sde_te_active &sde_dsi_id_active>;
@@ -239,7 +231,7 @@
 		ibb-supply = <&lcdb_ncp_vreg>;
 	};
 
-	dsi_ft8719a_fhd_video_display: qcom,dsi-display@18 {
+	dsi_ft8719a_fhd_video_display: qcom,dsi-display@22 {
 		compatible = "qcom,dsi-display";
 		label = "dsi_ft8719a_fhd_video_display";
 		qcom,display-type = "primary";
@@ -248,7 +240,7 @@
 		qcom,dsi-phy = <&mdss_dsi_phy0>;
 		clocks = <&mdss_dsi0_pll BYTECLK_MUX_0_CLK>,
 		       <&mdss_dsi0_pll PCLK_MUX_0_CLK>;
-		clock-names = "src_byte_clk", "src_pixel_clk";
+		clock-names = "mux_byte_clk", "mux_pixel_clk";
 
 		pinctrl-names = "panel_active", "panel_suspend";
 		pinctrl-0 = <&sde_dsi_active &sde_te_active &sde_dsi_id_active>;
@@ -262,7 +254,7 @@
 		ibb-supply = <&lcdb_ncp_vreg>;
 	};
 
-	dsi_hx83112_ctc_fhd_video_display: qcom,dsi-display@19 {
+	dsi_hx83112_ctc_fhd_video_display: qcom,dsi-display@23 {
 		compatible = "qcom,dsi-display";
 		label = "dsi_hx83112_ctc_fhd_video_display";
 		qcom,display-type = "primary";
@@ -271,7 +263,7 @@
 		qcom,dsi-phy = <&mdss_dsi_phy0>;
 		clocks = <&mdss_dsi0_pll BYTECLK_MUX_0_CLK>,
 		       <&mdss_dsi0_pll PCLK_MUX_0_CLK>;
-		clock-names = "src_byte_clk", "src_pixel_clk";
+		clock-names = "mux_byte_clk", "mux_pixel_clk";
 
 		pinctrl-names = "panel_active", "panel_suspend";
 		pinctrl-0 = <&sde_dsi_active &sde_te_active &sde_dsi_id_active>;
@@ -284,7 +276,7 @@
 		ibb-supply = <&lcdb_ncp_vreg>;
 	};
 
-	dsi_nt36672a_ctc_fhd_video_display: qcom,dsi-display@20 {
+	dsi_nt36672a_ctc_fhd_video_display: qcom,dsi-display@24 {
 		compatible = "qcom,dsi-display";
 		label = "dsi_nt36672a_ctc_fhd_video_display";
 		qcom,display-type = "primary";
@@ -293,7 +285,7 @@
 		qcom,dsi-phy = <&mdss_dsi_phy0>;
 		clocks = <&mdss_dsi0_pll BYTECLK_MUX_0_CLK>,
 			   <&mdss_dsi0_pll PCLK_MUX_0_CLK>;
-		clock-names = "src_byte_clk", "src_pixel_clk";
+		clock-names = "mux_byte_clk", "mux_pixel_clk";
 
 		pinctrl-names = "panel_active", "panel_suspend";
 		pinctrl-0 = <&sde_dsi_active &sde_te_active &sde_dsi_id_active>;

@@ -37,6 +37,11 @@
 #include <media/v4l2-ioctl.h>
 #include <media/radio-iris.h>
 #include <asm/unaligned.h>
+#define BBSLOG
+#ifdef BBSLOG
+#define FM_PROBE_ERROR do {printk("BBox;%s: Power on failure\n", __func__); printk("BBox::UEC;15::0\n");} while(0)
+#define FM_HCI_ERROR do {printk("BBox;%s: HCI cmd transfer failure\n", __func__); printk("BBox::UEC;15::1\n");} while(0)
+#endif
 
 static unsigned int rds_buf = 100;
 static int oda_agt;
@@ -4067,6 +4072,9 @@ static int iris_vidioc_s_ctrl(struct file *file, void *priv,
 			if (retval < 0) {
 				FMDERR("Enabling RECV FM fail %d\n", retval);
 				radio->mode = FM_OFF;
+#ifdef BBSLOG
+				FM_HCI_ERROR;
+#endif
 				goto end;
 			} else {
 				retval = initialise_recv(radio);
@@ -4095,6 +4103,9 @@ static int iris_vidioc_s_ctrl(struct file *file, void *priv,
 			if (retval < 0) {
 				FMDERR("Enabling TRANS FM fail %d\n", retval);
 				radio->mode = FM_OFF;
+#ifdef BBSLOG
+				FM_HCI_ERROR;
+#endif
 				goto end;
 			} else {
 				retval = initialise_trans(radio);
@@ -5504,11 +5515,17 @@ static int iris_probe(struct platform_device *pdev)
 
 	if (!pdev) {
 		FMDERR(": pdev is null\n");
+#ifdef BBSLOG
+		FM_PROBE_ERROR;
+#endif
 		return -ENOMEM;
 	}
 
 	radio = kzalloc(sizeof(struct iris_device), GFP_KERNEL);
 	if (!radio)
+#ifdef BBSLOG
+		FM_PROBE_ERROR;
+#endif
 		return -ENOMEM;
 
 	radio->dev = &pdev->dev;
@@ -5517,6 +5534,9 @@ static int iris_probe(struct platform_device *pdev)
 	radio->videodev = video_device_alloc();
 	if (!radio->videodev) {
 		kfree(radio);
+#ifdef BBSLOG
+		FM_PROBE_ERROR;
+#endif
 		return -ENOMEM;
 	}
 
@@ -5551,6 +5571,9 @@ static int iris_probe(struct platform_device *pdev)
 				kfifo_free(&radio->data_buf[i]);
 			video_device_release(radio->videodev);
 			kfree(radio);
+#ifdef BBSLOG
+			FM_PROBE_ERROR;
+#endif
 			return -ENOMEM;
 		}
 	}
@@ -5576,6 +5599,9 @@ static int iris_probe(struct platform_device *pdev)
 		for (; i > -1; i--)
 			kfifo_free(&radio->data_buf[i]);
 		kfree(radio);
+#ifdef BBSLOG
+		FM_PROBE_ERROR;
+#endif
 		return retval;
 	}
 	priv_videodev = kzalloc(sizeof(struct video_device),
@@ -5589,6 +5615,9 @@ static int iris_probe(struct platform_device *pdev)
 		for (; i > -1; i--)
 			kfifo_free(&radio->data_buf[i]);
 		kfree(radio);
+#ifdef BBSLOG
+			FM_PROBE_ERROR;
+#endif
 	}
 	return 0;
 }
