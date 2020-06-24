@@ -73,6 +73,7 @@ extern const uint16_t touch_key_array[TOUCH_KEY_NUM];
 #define NVT_TOUCH_SUPPORT_HW_RST 0
 
 //---Customerized func.---
+#define POINT_DATA_CHECKSUM 1
 #define NVT_TOUCH_PROC 1
 #define NVT_TOUCH_EXT_PROC 1
 #define NVT_TOUCH_MP 1

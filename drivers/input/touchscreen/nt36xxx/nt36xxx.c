@@ -847,6 +847,44 @@ static void nvt_esd_check_func(struct work_struct *work)
 }
 #endif /* #if NVT_TOUCH_ESD_PROTECT */
 
+
+#if POINT_DATA_CHECKSUM
+/*******************************************************
+Description:
+	Novatek touchscreen check i2c packet checksum function.
+
+return:
+	Executive outcomes. 0---succeed. not 0---failed.
+*******************************************************/
+static int32_t nvt_ts_point_data_checksum(uint8_t *buf, uint8_t length)
+{
+	uint8_t checksum = 0;
+	int32_t i = 0;
+
+	// Generate checksum
+	for (i = 0; i < length-1; i++) {
+		checksum += buf[i+1];
+	}
+	checksum = (~checksum + 1);
+
+	// Compare ckecksum and dump fail data
+	if (checksum != buf[length]) {
+		NVT_ERR("i2c/spi packet checksum not match. (point_data[%d]=0x%02X, checksum=0x%02X)\n", (length), buf[length], checksum);
+
+		for (i = 0; i < 10; i++) {
+			NVT_ERR("%02X %02X %02X %02X %02X %02X\n", buf[1+i*6], buf[2+i*6], buf[3+i*6], buf[4+i*6], buf[5+i*6], buf[6+i*6]);
+		}
+
+		for (i = 0; i < (length - 60); i++) {
+			NVT_ERR("%02X ", buf[1+60+i]);
+		}
+		return -1;
+	}
+
+	return 0;
+}
+#endif /* POINT_DATA_CHECKSUM */
+
 #define POINT_DATA_LEN 65
 /*******************************************************
 Description:
@@ -892,6 +930,13 @@ static void nvt_ts_work_func(struct work_struct *work)
 		goto XFER_ERROR;
 	}
 #endif /* #if NVT_TOUCH_ESD_PROTECT */
+
+#if POINT_DATA_CHECKSUM
+    ret = nvt_ts_point_data_checksum(point_data, POINT_DATA_LEN);
+    if (ret < 0) {
+        goto XFER_ERROR;
+    }
+#endif /* POINT_DATA_CHECKSUM */
 
 #if WAKEUP_GESTURE
 	if (gdouble_tap_enable_nvt)
