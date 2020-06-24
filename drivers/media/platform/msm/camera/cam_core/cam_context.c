@@ -202,7 +202,7 @@ int cam_context_handle_crm_process_evt(struct cam_context *ctx,
 {
 	int rc = 0;
 
-	if (!ctx->state_machine) {
+	if (!ctx || !ctx->state_machine) {
 		CAM_ERR(CAM_CORE, "Context is not ready");
 		return -EINVAL;
 	}
@@ -296,7 +296,7 @@ int cam_context_handle_flush_dev(struct cam_context *ctx,
 {
 	int rc = 0;
 
-	if (!ctx->state_machine) {
+	if (!ctx || !ctx->state_machine) {
 		CAM_ERR(CAM_CORE, "Context is not ready");
 		return -EINVAL;
 	}
